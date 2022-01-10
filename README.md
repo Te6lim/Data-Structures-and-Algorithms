@@ -2,7 +2,7 @@
 "Algorithms. Part I" by R. Sedgewick and K. Wayne https://www.coursera.org/learn/algorithms-part1
 
 ## Results from each assignment
-### Percolation (Based on dynamic connetivity using union-find):
+### Percolation (Based on dynamic connectivity using union-find):
 ![percolation final](https://user-images.githubusercontent.com/57777459/148730526-ecfdf1d3-8862-4e33-9a62-91b67a45896a.jpg)
 
 ### Deques and Randomized Queues (Based on Stack and Queue implementation):
