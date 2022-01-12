@@ -1,6 +1,9 @@
 # Project assignments based on the data structures studied from the course-
 "Algorithms. Part I" by R. Sedgewick and K. Wayne https://www.coursera.org/learn/algorithms-part1
 
+## Overall
+![algorithms part 1](https://user-images.githubusercontent.com/57777459/148730663-564600bd-a3b7-4a98-8622-f15ac8c219a3.jpg)
+
 ## Results from each assignment
 ### Percolation (Based on dynamic connectivity using union-find):
 ![percolation final](https://user-images.githubusercontent.com/57777459/148730526-ecfdf1d3-8862-4e33-9a62-91b67a45896a.jpg)
@@ -20,7 +23,3 @@
 ---
 ### KD-Trees (Based on Binary Search Trees)
 ![KD-trees final](https://user-images.githubusercontent.com/57777459/148730537-43544343-7bf5-4533-be46-85214b7b4686.jpg)
-
----
-## Conclusion
-![algorithms part 1](https://user-images.githubusercontent.com/57777459/148730663-564600bd-a3b7-4a98-8622-f15ac8c219a3.jpg)
