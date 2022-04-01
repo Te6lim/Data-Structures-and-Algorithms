@@ -260,7 +260,7 @@ public class KdTree {
         double pointX;
         double pointY;
 
-        for (int i = 0; i < 5; ++i) {
+        for (int i = 0; i < 1000; ++i) {
             pointX = StdRandom.uniform(0.0, 1.0);
             pointY = StdRandom.uniform(0.0, 1.0);
             tree.insert(new Point2D(KdTree.roundOff(pointX), KdTree.roundOff(pointY)));

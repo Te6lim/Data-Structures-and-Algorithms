@@ -1,6 +1,5 @@
 package priorityQueue;
 
-import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.MinPQ;
 import edu.princeton.cs.algs4.StdOut;
 import java.util.ArrayList;
@@ -161,14 +160,14 @@ public class Solver {
     // test client (see below)
     public static void main(String[] args) {
         // create initial board from file
-        In in = new In(args[0]);
+        /*In in = new In(args[0]);
         int n = in.readInt();
         int[][] tiles = new int[n][n];
         for (int i = 0; i < n; i++)
             for (int j = 0; j < n; j++)
-                tiles[i][j] = in.readInt();
+                tiles[i][j] = in.readInt();*/
 
-        /* /int[][] tiles = new int[3][3];
+         int[][] tiles = new int[3][3];
 
         tiles[0][0] = 2;
         tiles[0][1] = 8;
@@ -180,7 +179,7 @@ public class Solver {
         tiles[2][1] = 0;
         tiles[2][2] = 4;
 
-        tiles[0][0] = 8;
+        /*tiles[0][0] = 8;
         tiles[0][1] = 2;
         tiles[0][2] = 3;
         tiles[1][0] = 0;
@@ -208,9 +207,9 @@ public class Solver {
         tiles[1][2] = 2;
         tiles[2][0] = 7;
         tiles[2][1] = 6;
-        tiles[2][2] = 5;
+        tiles[2][2] = 5;*/
 
-        tiles[0][0] = 0;
+         /*tiles[0][0] = 0;
         tiles[0][1] = 1;
         tiles[0][2] = 3;
         tiles[1][0] = 4;
@@ -225,8 +224,7 @@ public class Solver {
         Solver solver = new Solver(initial);
 
         // print solution to standard output
-        if (!solver.isSolvable())
-            StdOut.println("No solution possible");
+        if (!solver.isSolvable()) StdOut.println("No solution possible");
         else {
             StdOut.println("Minimum number of moves = " + solver.moves());
             for (Board board : solver.solution()) {

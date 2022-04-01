@@ -115,7 +115,7 @@ public class Deque<Item> implements Iterable<Item> {
         int current = top + 1;
         @Override
         public boolean hasNext() {
-            return current < bottom && array[current] != null;
+            return /*current < bottom && */ array[current] != null;
         }
 
         @Override
