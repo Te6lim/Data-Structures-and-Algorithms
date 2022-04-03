@@ -1,9 +1,62 @@
 package directed_graphs;
 
+import edu.princeton.cs.algs4.Bag;
+import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.StdOut;
+
+import java.util.ArrayList;
+
 public class WordNet {
 
     // constructor takes the name of the two input files
-    public WordNet(String synsets, String hypernyms) {}
+    public WordNet(String synSets, String hypernyms) {
+        In synSetFile = new In(synSets);
+        ArrayList<Bag<String>> adjList = new ArrayList<>();
+
+        String line;
+        int indexOfExtraction;
+        Bag<String> words;
+
+        while (synSetFile.hasNextLine()) {
+            line = synSetFile.readLine();
+            indexOfExtraction = pointOfSynSetExtraction(line);
+            words = getBagOfStrings(indexOfExtraction, line);
+            adjList.add(words);
+        }
+
+        for (Bag<String> bag : adjList) {
+            for (String s : bag) StdOut.print("(" + s + ")");
+            StdOut.println();
+        }
+    }
+
+    private int pointOfSynSetExtraction(String line) {
+        int counter = 0;
+        char c = line.charAt(counter);
+        while (c != ',') {
+            if (++counter == line.length()) { return -1; }
+            c = line.charAt(counter);
+        }
+        return counter + 1;
+    }
+
+    private Bag<String> getBagOfStrings(int index, String line) {
+        char c = line.charAt(index);
+        StringBuilder word = new StringBuilder();
+        Bag<String> wordBag = new Bag<>();
+        while (c != ',') {
+            if (c != ' ') {
+                word.append(c);
+            } else {
+                wordBag.add(word.toString());
+                word = new StringBuilder();
+            }
+            if (++index == line.length()) break;
+            c = line.charAt(index);
+        }
+        if (!word.isEmpty()) wordBag.add(word.toString());
+        return wordBag;
+    }
 
     // returns all WordNet nouns
     public Iterable<String> nouns() { return null; }
@@ -19,6 +72,11 @@ public class WordNet {
     public String sap(String nounA, String nounB) { return null; }
 
     // do unit testing of this class
-    public static void main(String[] args) {  }
+    public static void main(String[] args) {
+        WordNet wn = new WordNet(
+                "C:\\Users\\ADMIN\\IdeaProjects\\Data Structures and Algorithms\\src\\directed_graphs" +
+                        "\\synsets.txt",
+                null);
+    }
 
 }
