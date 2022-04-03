@@ -4,24 +4,31 @@ import edu.princeton.cs.algs4.Bag;
 import edu.princeton.cs.algs4.In;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class WordNet {
 
     private final ArrayList<Bag<String>> synSets;
     private final ArrayList<Bag<Integer>> hypernyms;
 
+    private ArrayList<String> nouns;
+
     // constructor takes the name of the two input files
     public WordNet(String synSetsFileName, String hypernymFileName) {
-        argumentCheck(synSetsFileName, hypernymFileName);
+        validateInput(synSetsFileName == null, hypernymFileName == null);
 
-        synSets = extractSynSetsFromFileInput(synSetsFileName);
-        hypernyms = extractHypernymsFromInputFile(hypernymFileName);
+        nouns = new ArrayList<>();
+
+        synSets = getSynSetsFromFileInput(synSetsFileName);
+        hypernyms = getHypernymsFromInputFile(hypernymFileName);
 
         if (!isRootDAG()) throw new IllegalArgumentException();
-    }
 
-    private void argumentCheck(String a, String b) {
-        if (a == null || b == null) throw new IllegalArgumentException();
+        nouns = new ArrayList<>();
+        for (Bag<String> synonyms : synSets) {
+            for (String word : synonyms) nouns.add(word);
+        }
+
     }
 
     private boolean isRootDAG() {
@@ -41,17 +48,24 @@ public class WordNet {
     private Bag<String> getBagOfSynonyms(int index, String line) {
         char c = line.charAt(index);
         StringBuilder word = new StringBuilder();
+        String wordToString;
         Bag<String> wordBag = new Bag<>();
         while (c != ',') {
             if (c != ' ') word.append(c);
             else {
-                wordBag.add(word.toString());
+                wordToString = word.toString();
+                wordBag.add(wordToString);
+                nouns.add(wordToString);
                 word = new StringBuilder();
             }
             if (++index == line.length()) break;
             c = line.charAt(index);
         }
-        if (!word.isEmpty()) wordBag.add(word.toString());
+        if (!word.isEmpty()) {
+            wordToString = word.toString();
+            wordBag.add(word.toString());
+            nouns.add(wordToString);
+        }
         return wordBag;
     }
 
@@ -70,10 +84,11 @@ public class WordNet {
             c = line.charAt(index);
         }
         if (!referenceToSynSet.isEmpty()) synSets.add(Integer.parseInt(referenceToSynSet.toString()));
+
         return synSets;
     }
 
-    private ArrayList<Bag<String>> extractSynSetsFromFileInput(String fileName) {
+    private ArrayList<Bag<String>> getSynSetsFromFileInput(String fileName) {
         In synSetFile = new In(fileName);
         ArrayList<Bag<String>> synSets = new ArrayList<>();
 
@@ -94,7 +109,7 @@ public class WordNet {
         }
     }
 
-    private ArrayList<Bag<Integer>> extractHypernymsFromInputFile(String fileName) {
+    private ArrayList<Bag<Integer>> getHypernymsFromInputFile(String fileName) {
         In hypernymFile = new In(fileName);
         ArrayList<Bag<Integer>> hypernyms = new ArrayList<>();
 
@@ -116,24 +131,30 @@ public class WordNet {
 
     // returns all WordNet nouns
     public Iterable<String> nouns() {
-        ArrayList<String> nouns = new ArrayList<>();
-        for (Bag<String> synonyms : synSets) {
-            for (String word : synonyms) nouns.add(word);
-        }
         return nouns;
     }
 
     // is the word a WordNet noun?
     public boolean isNoun(String word) {
-        return false;
+        return Collections.binarySearch(nouns, word) >= 0;
     }
 
     // distance between nounA and nounB (defined below)
-    public int distance(String nounA, String nounB) { return 0; }
+    public int distance(String nounA, String nounB) {
+        validateInput(!isNoun(nounA), !isNoun(nounB));
+        return 0;
+    }
+
+    private void validateInput(boolean b, boolean b2) {
+        if (b || b2) throw new IllegalArgumentException();
+    }
 
     // a synset (second field of synsets.txt) that is the common ancestor of nounA and nounB
     // in a shortest ancestral path (defined below)
-    public String sap(String nounA, String nounB) { return null; }
+    public String sap(String nounA, String nounB) {
+        validateInput(isNoun(nounA), isNoun(nounB));
+        return null;
+    }
 
     // do unit testing of this class
     public static void main(String[] args) {
