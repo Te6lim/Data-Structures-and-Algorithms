@@ -8,10 +8,10 @@ import java.util.Collections;
 
 public class WordNet {
 
-    private final ArrayList<Bag<String>> synSets;
+    private final ArrayList<Bag<String>> synsets;
     private final ArrayList<Bag<Integer>> hypernyms;
 
-    private ArrayList<String> nouns;
+    private final ArrayList<String> nouns;
 
     // constructor takes the name of the two input files
     public WordNet(String synSetsFileName, String hypernymFileName) {
@@ -19,20 +19,17 @@ public class WordNet {
 
         nouns = new ArrayList<>();
 
-        synSets = getSynSetsFromFileInput(synSetsFileName);
+        synsets = getSynSetsFromFileInput(synSetsFileName);
         hypernyms = getHypernymsFromInputFile(hypernymFileName);
 
-        if (!isRootDAG()) throw new IllegalArgumentException();
+        Collections.sort(nouns);
 
-        nouns = new ArrayList<>();
-        for (Bag<String> synonyms : synSets) {
-            for (String word : synonyms) nouns.add(word);
-        }
+        if (!isRootDAG()) throw new IllegalArgumentException();
 
     }
 
     private boolean isRootDAG() {
-        return synSets.size() == hypernyms.size() + 1;
+        return synsets.size() == hypernyms.size() + 1;
     }
 
     private int pointOfExtraction(String line) {
@@ -115,14 +112,14 @@ public class WordNet {
 
         String line;
         int indexOfExtraction;
-        Bag<Integer> synSetReferences;
+        Bag<Integer> synsetReferences;
 
         while (hypernymFile.hasNextLine()) {
             line = hypernymFile.readLine();
             indexOfExtraction = pointOfExtraction(line);
             if (indexOfExtraction != -1) {
-                synSetReferences = getBagOfSynSetReferences(indexOfExtraction, line);
-                hypernyms.add(synSetReferences);
+                synsetReferences = getBagOfSynSetReferences(indexOfExtraction, line);
+                hypernyms.add(synsetReferences);
             }
         }
 
@@ -142,7 +139,15 @@ public class WordNet {
     // distance between nounA and nounB (defined below)
     public int distance(String nounA, String nounB) {
         validateInput(!isNoun(nounA), !isNoun(nounB));
-        return 0;
+
+        int positionOfA = 0, positionOfB = 0;
+        for (int c = 0; c < synsets.size(); ++c) {
+            for(String word : synsets.get(c)) {
+                if (word.equals(nounA)) positionOfA = c;
+                else if (word.equals(nounB)) positionOfB = c;
+            }
+        }
+        return Math.abs(positionOfA - positionOfB);
     }
 
     private void validateInput(boolean b, boolean b2) {
