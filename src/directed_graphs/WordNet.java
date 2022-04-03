@@ -2,32 +2,14 @@ package directed_graphs;
 
 import edu.princeton.cs.algs4.Bag;
 import edu.princeton.cs.algs4.In;
-import edu.princeton.cs.algs4.StdOut;
 
 import java.util.ArrayList;
 
 public class WordNet {
 
     // constructor takes the name of the two input files
-    public WordNet(String synSets, String hypernyms) {
-        In synSetFile = new In(synSets);
-        ArrayList<Bag<String>> adjList = new ArrayList<>();
-
-        String line;
-        int indexOfExtraction;
-        Bag<String> words;
-
-        while (synSetFile.hasNextLine()) {
-            line = synSetFile.readLine();
-            indexOfExtraction = pointOfSynSetExtraction(line);
-            words = getBagOfStrings(indexOfExtraction, line);
-            adjList.add(words);
-        }
-
-        for (Bag<String> bag : adjList) {
-            for (String s : bag) StdOut.print("(" + s + ")");
-            StdOut.println();
-        }
+    public WordNet(String synSetsFileName, String hypernyms) {
+        ArrayList<Bag<String>> synSets = extractSynSetsFromFileInput(synSetsFileName);
     }
 
     private int pointOfSynSetExtraction(String line) {
@@ -56,6 +38,24 @@ public class WordNet {
         }
         if (!word.isEmpty()) wordBag.add(word.toString());
         return wordBag;
+    }
+
+    private ArrayList<Bag<String>> extractSynSetsFromFileInput(String fileName) {
+        In synSetFile = new In(fileName);
+        ArrayList<Bag<String>> synSets = new ArrayList<>();
+
+        String line;
+        int indexOfExtraction;
+        Bag<String> words;
+
+        while (synSetFile.hasNextLine()) {
+            line = synSetFile.readLine();
+            indexOfExtraction = pointOfSynSetExtraction(line);
+            words = getBagOfStrings(indexOfExtraction, line);
+            synSets.add(words);
+        }
+
+        return synSets;
     }
 
     // returns all WordNet nouns
