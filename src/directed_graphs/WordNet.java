@@ -2,27 +2,30 @@ package directed_graphs;
 
 import edu.princeton.cs.algs4.Bag;
 import edu.princeton.cs.algs4.In;
-import edu.princeton.cs.algs4.StdOut;
 
 import java.util.ArrayList;
 
 public class WordNet {
 
-    private ArrayList<Bag<String>> synSets;
-    private ArrayList<Bag<Integer>> hypernyms;
+    private final ArrayList<Bag<String>> synSets;
+    private final ArrayList<Bag<Integer>> hypernyms;
 
     // constructor takes the name of the two input files
     public WordNet(String synSetsFileName, String hypernymFileName) {
+        argumentCheck(synSetsFileName, hypernymFileName);
+
         synSets = extractSynSetsFromFileInput(synSetsFileName);
         hypernyms = extractHypernymsFromInputFile(hypernymFileName);
 
-        int counter = 0;
-        for (Bag<Integer> b : hypernyms) {
-            StdOut.print(counter);
-            for (Integer i : b) StdOut.print(", " + i);
-            StdOut.println();
-            ++counter;
-        }
+        if (!isRootDAG()) throw new IllegalArgumentException();
+    }
+
+    private void argumentCheck(String a, String b) {
+        if (a == null || b == null) throw new IllegalArgumentException();
+    }
+
+    private boolean isRootDAG() {
+        return synSets.size() == hypernyms.size() + 1;
     }
 
     private int pointOfExtraction(String line) {
@@ -74,20 +77,21 @@ public class WordNet {
         In synSetFile = new In(fileName);
         ArrayList<Bag<String>> synSets = new ArrayList<>();
 
-        String line;
-        int indexOfExtraction;
-        Bag<String> words;
-
-        while (synSetFile.hasNextLine()) {
-            line = synSetFile.readLine();
-            indexOfExtraction = pointOfExtraction(line);
-            if (indexOfExtraction != -1) {
-                words = getBagOfSynonyms(indexOfExtraction, line);
-                synSets.add(words);
-            }
-        }
+        while (synSetFile.hasNextLine()) addWordsToSynSetsFromFile(synSetFile, synSets);
 
         return synSets;
+    }
+
+    private void addWordsToSynSetsFromFile(In synSetFile, ArrayList<Bag<String>> synSets) {
+        int indexOfExtraction;
+        Bag<String> words;
+        String line;
+        line = synSetFile.readLine();
+        indexOfExtraction = pointOfExtraction(line);
+        if (indexOfExtraction != -1) {
+            words = getBagOfSynonyms(indexOfExtraction, line);
+            synSets.add(words);
+        }
     }
 
     private ArrayList<Bag<Integer>> extractHypernymsFromInputFile(String fileName) {
@@ -111,10 +115,18 @@ public class WordNet {
     }
 
     // returns all WordNet nouns
-    public Iterable<String> nouns() { return null; }
+    public Iterable<String> nouns() {
+        ArrayList<String> nouns = new ArrayList<>();
+        for (Bag<String> synonyms : synSets) {
+            for (String word : synonyms) nouns.add(word);
+        }
+        return nouns;
+    }
 
     // is the word a WordNet noun?
-    public boolean isNoun(String word) { return false; }
+    public boolean isNoun(String word) {
+        return false;
+    }
 
     // distance between nounA and nounB (defined below)
     public int distance(String nounA, String nounB) { return 0; }
