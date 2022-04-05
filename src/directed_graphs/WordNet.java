@@ -2,6 +2,7 @@ package directed_graphs;
 
 import edu.princeton.cs.algs4.Bag;
 import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.StdOut;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,7 +12,11 @@ public class WordNet {
     private final ArrayList<Bag<String>> synsets;
     private final ArrayList<Bag<Integer>> hypernyms;
 
+    private final boolean[] markedSynsets;
+
     private final ArrayList<String> nouns;
+
+    private Integer rootPosition = null;
 
     // constructor takes the name of the two input files
     public WordNet(String synSetsFileName, String hypernymFileName) {
@@ -26,10 +31,12 @@ public class WordNet {
 
         if (!isRootDAG()) throw new IllegalArgumentException();
 
+        markedSynsets = new boolean[hypernyms.size()];
+
     }
 
     private boolean isRootDAG() {
-        return synsets.size() == hypernyms.size() + 1;
+        return rootPosition != null;
     }
 
     private int pointOfExtraction(String line) {
@@ -67,22 +74,25 @@ public class WordNet {
     }
 
     private Bag<Integer> getBagOfSynSetReferences(int index, String line) {
-        char c = line.charAt(index);
-        Bag<Integer> synSets = new Bag<>();
+        Bag<Integer> bagOfSynsets = null;
+        if (index != -1) {
+            char c = line.charAt(index);
+            bagOfSynsets = new Bag<>();
 
-        StringBuilder referenceToSynSet = new StringBuilder();
-        while (true) {
-            if (c != ',') referenceToSynSet.append(c);
-            else {
-                synSets.add(Integer.parseInt(referenceToSynSet.toString()));
-                referenceToSynSet = new StringBuilder();
+            StringBuilder referenceToSynSet = new StringBuilder();
+            while (true) {
+                if (c != ',') referenceToSynSet.append(c);
+                else {
+                    bagOfSynsets.add(Integer.parseInt(referenceToSynSet.toString()));
+                    referenceToSynSet = new StringBuilder();
+                }
+                if (++index == line.length()) break;
+                c = line.charAt(index);
             }
-            if (++index == line.length()) break;
-            c = line.charAt(index);
+            if (!referenceToSynSet.isEmpty()) bagOfSynsets.add(Integer.parseInt(referenceToSynSet.toString()));
         }
-        if (!referenceToSynSet.isEmpty()) synSets.add(Integer.parseInt(referenceToSynSet.toString()));
 
-        return synSets;
+        return bagOfSynsets;
     }
 
     private ArrayList<Bag<String>> getSynSetsFromFileInput(String fileName) {
@@ -117,10 +127,9 @@ public class WordNet {
         while (hypernymFile.hasNextLine()) {
             line = hypernymFile.readLine();
             indexOfExtraction = pointOfExtraction(line);
-            if (indexOfExtraction != -1) {
-                synsetReferences = getBagOfSynSetReferences(indexOfExtraction, line);
-                hypernyms.add(synsetReferences);
-            }
+            synsetReferences = getBagOfSynSetReferences(indexOfExtraction, line);
+            hypernyms.add(synsetReferences);
+            if (indexOfExtraction == -1) rootPosition = hypernyms.size() - 1;
         }
 
         return hypernyms;
@@ -133,21 +142,24 @@ public class WordNet {
 
     // is the word a WordNet noun?
     public boolean isNoun(String word) {
-        return Collections.binarySearch(nouns, word) >= 0;
+        int isNoun = Collections.binarySearch(nouns, word);
+        return isNoun >= 0;
+    }
+
+    private int getNounPosition(String noun) {
+        for (int c = 0; c < synsets.size(); ++c) {
+            for(String word : synsets.get(c)) {
+                if (word.equals(noun)) return c;
+            }
+        }
+        return -1;
     }
 
     // distance between nounA and nounB (defined below)
     public int distance(String nounA, String nounB) {
         validateInput(!isNoun(nounA), !isNoun(nounB));
 
-        int positionOfA = 0, positionOfB = 0;
-        for (int c = 0; c < synsets.size(); ++c) {
-            for(String word : synsets.get(c)) {
-                if (word.equals(nounA)) positionOfA = c;
-                else if (word.equals(nounB)) positionOfB = c;
-            }
-        }
-        return Math.abs(positionOfA - positionOfB);
+        return 0;
     }
 
     private void validateInput(boolean b, boolean b2) {
@@ -157,8 +169,50 @@ public class WordNet {
     // a synset (second field of synsets.txt) that is the common ancestor of nounA and nounB
     // in a shortest ancestral path (defined below)
     public String sap(String nounA, String nounB) {
-        validateInput(isNoun(nounA), isNoun(nounB));
-        return null;
+        validateInput(!isNoun(nounA), !isNoun(nounB));
+
+        int positionA = getNounPosition(nounA), positionB = getNounPosition(nounB);
+
+        Bag<String> ancestor = synsets.get(dfs(positionA, positionB, true));
+
+        StringBuilder ancestorBuilder = new StringBuilder();
+        for (String s : ancestor) {
+            ancestorBuilder.append(s);
+            ancestorBuilder.append(" ");
+        }
+        ancestorBuilder.deleteCharAt(ancestorBuilder.length() - 1);
+
+        return ancestorBuilder.toString();
+
+    }
+
+    private int dfs(Integer currentPositionA, Integer currentPositionB, boolean isAsTurn) {
+        if (isAsTurn && currentPositionA != null) {
+            if (markedSynsets[currentPositionA])
+                return currentPositionA;
+            else markedSynsets[currentPositionA] = true;
+
+            if (hypernyms.get(currentPositionA) != null) {
+                for (int p : hypernyms.get(currentPositionA)) {
+                    if (!markedSynsets[p]) {
+                        return dfs(p, currentPositionB, false);
+                    } else return p;
+                }
+            }
+        } else {
+            if (markedSynsets[currentPositionB])
+                return currentPositionB;
+            else markedSynsets[currentPositionB] = true;
+
+            if (hypernyms.get(currentPositionB) != null) {
+                for (int p : hypernyms.get(currentPositionB)) {
+                    if (!markedSynsets[p]) {
+                        return dfs(currentPositionA, p, true);
+                    } else return p;
+                }
+            }
+        }
+        return rootPosition;
     }
 
     // do unit testing of this class
@@ -169,6 +223,9 @@ public class WordNet {
                 "C:\\Users\\ADMIN\\IdeaProjects\\Data Structures and Algorithms\\src" +
                         "\\directed_graphs\\hypernyms.txt"
         );
-    }
 
+        //for (String n : wn.nouns()) StdOut.println(n);
+
+        StdOut.println(wn.sap("Abuja", "Accra"));
+    }
 }
