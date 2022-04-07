@@ -14,7 +14,7 @@ public class WordNet {
 
     private boolean[] markedSynsets;
 
-    private int[] v;
+    private int[] childCount;
 
     private final ArrayList<String> nouns;
 
@@ -33,7 +33,7 @@ public class WordNet {
 
         if (!isRootDAG()) throw new IllegalArgumentException();
 
-        v = new int[hypernyms.size()];
+        childCount = new int[hypernyms.size()];
 
         markedSynsets = new boolean[hypernyms.size()];
 
@@ -164,11 +164,11 @@ public class WordNet {
     // distance between nounA and nounB (defined below)
     public int distance(String nounA, String nounB) {
         validateInput(!isNoun(nounA), !isNoun(nounB));
-        resetAncestorCount();
+        resetChildCount();
         markedSynsets = new boolean[hypernyms.size()];
 
         int positionA = getNounPosition(nounA), positionB = getNounPosition(nounB);
-        return v[findCommonAncestor(positionA, positionB, true)];
+        return childCount[findCommonAncestor(positionA, positionB, true)];
     }
 
     private void validateInput(boolean b, boolean b2) {
@@ -179,7 +179,7 @@ public class WordNet {
     // in a shortest ancestral path (defined below)
     public String sap(String nounA, String nounB) {
         validateInput(!isNoun(nounA), !isNoun(nounB));
-        resetAncestorCount();
+        resetChildCount();
         markedSynsets = new boolean[hypernyms.size()];
 
         int positionA = getNounPosition(nounA), positionB = getNounPosition(nounB);
@@ -198,45 +198,40 @@ public class WordNet {
     }
 
     private int findCommonAncestor(int currentPositionA, int currentPositionB, boolean switchToA) {
-        int ancestor;
         if (switchToA) {
             if (isSynsetMarked(currentPositionA)) return currentPositionA;
-            markedSynsets[currentPositionA] = true;
+            markPosition(currentPositionA);
 
             if (hypernyms.get(currentPositionA) != null) {
                 for (int p : hypernyms.get(currentPositionA)) {
-                    ancestor = getAncestor(p, findCommonAncestor(p, currentPositionB, false));
-                    v[ancestor] += v[currentPositionA] + 1;
-                    return ancestor;
+                    childCount[p] += childCount[currentPositionA] + 1;
+                    return findCommonAncestor(p, currentPositionB, false);
                 }
             }
         } else {
             if (isSynsetMarked(currentPositionB)) return currentPositionB;
-            markedSynsets[currentPositionB] = true;
+            markPosition(currentPositionB);
 
             if (hypernyms.get(currentPositionB) != null) {
                 for (int p : hypernyms.get(currentPositionB)) {
-                    ancestor = getAncestor(p, findCommonAncestor(currentPositionA, p, true));
-                    v[ancestor] += v[currentPositionB] + 1;
-                    return ancestor;
+                    childCount[p] += childCount[currentPositionB] + 1;
+                    return findCommonAncestor(currentPositionA, p, true);
                 }
             }
         }
         return rootPosition;
     }
 
-    private int getAncestor(int p, int commonAncestor) {
-        if (!isSynsetMarked(p)) {
-            return commonAncestor;
-        } else return p;
+    private void markPosition(int currentPositionA) {
+        markedSynsets[currentPositionA] = true;
     }
 
     private boolean isSynsetMarked(Integer currentPositionA) {
         return markedSynsets[currentPositionA];
     }
 
-    private void resetAncestorCount() {
-        v = new int[hypernyms.size()];
+    private void resetChildCount() {
+        childCount = new int[hypernyms.size()];
     }
 
     // do unit testing of this class
@@ -248,7 +243,7 @@ public class WordNet {
                         "\\directed_graphs\\hypernyms.txt"
         );
 
-        StdOut.println(wn.sap("Abuja", "Accra"));
-        StdOut.println(wn.distance("Abuja", "Accra"));
+        StdOut.println(wn.sap("transgression", "resistance"));
+        StdOut.println(wn.distance("transgression", "resistance"));
     }
 }
