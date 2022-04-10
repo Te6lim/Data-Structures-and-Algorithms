@@ -6,6 +6,7 @@ import edu.princeton.cs.algs4.StdOut;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 
 public class WordNet {
 
@@ -35,7 +36,7 @@ public class WordNet {
 
         childCount = new int[hypernyms.size()];
 
-        markedSynsets = new boolean[hypernyms.size()];
+        resetMarkedSynsets();
 
     }
 
@@ -152,23 +153,46 @@ public class WordNet {
         return isNoun >= 0;
     }
 
-    private int getNounPosition(String noun) {
+    private ArrayList<Integer> getNounsPosition(String noun) {
+        ArrayList<Integer> nounPositions = new ArrayList<>();
         for (int c = 0; c < synsets.size(); ++c) {
             for (String word : synsets.get(c)) {
-                if (word.equals(noun)) return c;
+                if (word.equals(noun)) nounPositions.add(c);
             }
         }
-        return -1;
+        if (!nounPositions.isEmpty()) return nounPositions; else return null;
     }
 
     // distance between nounA and nounB (defined below)
     public int distance(String nounA, String nounB) {
         validateInput(!isNoun(nounA), !isNoun(nounB));
         resetChildCount();
-        markedSynsets = new boolean[hypernyms.size()];
+        resetMarkedSynsets();
 
-        int positionA = getNounPosition(nounA), positionB = getNounPosition(nounB);
-        return childCount[findCommonAncestor(positionA, positionB, true)];
+        ArrayList<Integer> setOfSynsetsOfA = getNounsPosition(nounA), setOfSynsetsOfB = getNounsPosition(nounB);
+
+        ArrayList<Integer> ancestors = new ArrayList<>(), lengths = new ArrayList<>();
+        int ancestor;
+
+        assert setOfSynsetsOfA != null;
+        for (Integer i : setOfSynsetsOfA) {
+            assert setOfSynsetsOfB != null;
+            for (Integer j : setOfSynsetsOfB) {
+                resetChildCount();
+                resetMarkedSynsets();
+                ancestor = findCommonAncestor(i, j, true);
+                if (Collections.binarySearch(ancestors, ancestor) < 0) {
+                    ancestors.add(ancestor);
+                    lengths.add(childCount[ancestor]);
+                }
+            }
+        }
+        Collections.sort(lengths);
+        if (!lengths.isEmpty()) return lengths.get(0); else return -1;
+    }
+
+    private void resetMarkedSynsets() {
+        markedSynsets = new boolean[hypernyms.size()];
     }
 
     private void validateInput(boolean b, boolean b2) {
@@ -180,14 +204,32 @@ public class WordNet {
     public String sap(String nounA, String nounB) {
         validateInput(!isNoun(nounA), !isNoun(nounB));
         resetChildCount();
-        markedSynsets = new boolean[hypernyms.size()];
+        resetMarkedSynsets();
 
-        int positionA = getNounPosition(nounA), positionB = getNounPosition(nounB);
+        ArrayList<Integer> setOfSynsetsOfA = getNounsPosition(nounA), setOfSynsetsOfB = getNounsPosition(nounB);
 
-        Bag<String> ancestor = synsets.get(findCommonAncestor(positionA, positionB, true));
+        ArrayList<Integer> ancestors = new ArrayList<>(), lengths = new ArrayList<>();
+        HashMap<Integer, Integer> lengthHashMap = new HashMap<>();
+
+        int ancestor;
+
+        for (Integer i : setOfSynsetsOfA) {
+            for (Integer j : setOfSynsetsOfB) {
+                resetChildCount();
+                resetMarkedSynsets();
+                ancestor = findCommonAncestor(i, j, true);
+                if (Collections.binarySearch(ancestors, ancestor) < 0){
+                    ancestors.add(ancestor);
+                    lengths.add(childCount[ancestor]);
+                    lengthHashMap.put(childCount[ancestor], ancestor);
+                }
+            }
+        }
+
+        Collections.sort(lengths);
 
         StringBuilder ancestorBuilder = new StringBuilder();
-        for (String s : ancestor) {
+        for (String s : synsets.get(lengthHashMap.get(lengths.get(0)))) {
             ancestorBuilder.append(s);
             ancestorBuilder.append(" ");
         }
