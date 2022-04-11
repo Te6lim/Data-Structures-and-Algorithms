@@ -34,7 +34,7 @@ public class WordNet {
 
         if (!isRootDAG()) throw new IllegalArgumentException();
 
-        childCount = new int[hypernyms.size()];
+        resetChildCount();
 
         resetMarkedSynsets();
 
@@ -153,30 +153,26 @@ public class WordNet {
         return isNoun >= 0;
     }
 
-    private ArrayList<Integer> getNounsPosition(String noun) {
+    private ArrayList<Integer> getNounPositions(String noun) {
         ArrayList<Integer> nounPositions = new ArrayList<>();
         for (int c = 0; c < synsets.size(); ++c) {
             for (String word : synsets.get(c)) {
                 if (word.equals(noun)) nounPositions.add(c);
             }
         }
-        if (!nounPositions.isEmpty()) return nounPositions; else return null;
+        return nounPositions;
     }
 
     // distance between nounA and nounB (defined below)
     public int distance(String nounA, String nounB) {
         validateInput(!isNoun(nounA), !isNoun(nounB));
-        resetChildCount();
-        resetMarkedSynsets();
 
-        ArrayList<Integer> setOfSynsetsOfA = getNounsPosition(nounA), setOfSynsetsOfB = getNounsPosition(nounB);
+        ArrayList<Integer> setOfSynsetsOfA = getNounPositions(nounA), setOfSynsetsOfB = getNounPositions(nounB);
 
         ArrayList<Integer> ancestors = new ArrayList<>(), lengths = new ArrayList<>();
         int ancestor;
 
-        assert setOfSynsetsOfA != null;
         for (Integer i : setOfSynsetsOfA) {
-            assert setOfSynsetsOfB != null;
             for (Integer j : setOfSynsetsOfB) {
                 resetChildCount();
                 resetMarkedSynsets();
@@ -203,10 +199,8 @@ public class WordNet {
     // in a shortest ancestral path (defined below)
     public String sap(String nounA, String nounB) {
         validateInput(!isNoun(nounA), !isNoun(nounB));
-        resetChildCount();
-        resetMarkedSynsets();
 
-        ArrayList<Integer> setOfSynsetsOfA = getNounsPosition(nounA), setOfSynsetsOfB = getNounsPosition(nounB);
+        ArrayList<Integer> setOfSynsetsOfA = getNounPositions(nounA), setOfSynsetsOfB = getNounPositions(nounB);
 
         ArrayList<Integer> ancestors = new ArrayList<>(), lengths = new ArrayList<>();
         HashMap<Integer, Integer> lengthHashMap = new HashMap<>();
@@ -249,7 +243,7 @@ public class WordNet {
                     childCount[p] += childCount[currentPositionA] + 1;
                     return findCommonAncestor(p, currentPositionB, false);
                 }
-            }
+            } else return findCommonAncestor(currentPositionA, currentPositionB, false);
         } else {
             if (isSynsetMarked(currentPositionB)) return currentPositionB;
             markPosition(currentPositionB);
@@ -259,7 +253,7 @@ public class WordNet {
                     childCount[p] += childCount[currentPositionB] + 1;
                     return findCommonAncestor(currentPositionA, p, true);
                 }
-            }
+            } else return findCommonAncestor(currentPositionA, currentPositionB, true);
         }
         return rootPosition;
     }
@@ -285,7 +279,7 @@ public class WordNet {
                         "\\directed_graphs\\hypernyms.txt"
         );
 
-        StdOut.println(wn.sap("transgression", "resistance"));
-        StdOut.println(wn.distance("transgression", "resistance"));
+        StdOut.println(wn.sap("miracle", "group_action"));
+        StdOut.println(wn.distance("miracle", "group_action"));
     }
 }
