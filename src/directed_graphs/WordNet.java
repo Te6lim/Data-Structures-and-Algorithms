@@ -2,6 +2,7 @@ package directed_graphs;
 
 import edu.princeton.cs.algs4.Bag;
 import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.Queue;
 import edu.princeton.cs.algs4.StdOut;
 
 import java.util.ArrayList;
@@ -176,7 +177,7 @@ public class WordNet {
             for (Integer j : setOfSynsetsOfB) {
                 resetChildCount();
                 resetMarkedSynsets();
-                ancestor = findCommonAncestor(i, j, true);
+                ancestor = findCommonAncestor(i, j);
                 if (Collections.binarySearch(ancestors, ancestor) < 0) {
                     ancestors.add(ancestor);
                     lengths.add(childCount[ancestor]);
@@ -211,7 +212,7 @@ public class WordNet {
             for (Integer j : setOfSynsetsOfB) {
                 resetChildCount();
                 resetMarkedSynsets();
-                ancestor = findCommonAncestor(i, j, true);
+                ancestor = findCommonAncestor(i, j);
                 if (Collections.binarySearch(ancestors, ancestor) < 0){
                     ancestors.add(ancestor);
                     lengths.add(childCount[ancestor]);
@@ -233,29 +234,56 @@ public class WordNet {
 
     }
 
-    private int findCommonAncestor(int currentPositionA, int currentPositionB, boolean switchToA) {
-        if (switchToA) {
-            if (isSynsetMarked(currentPositionA)) return currentPositionA;
-            markPosition(currentPositionA);
+    private int findCommonAncestor(int currentPositionA, int currentPositionB) {
+        boolean switchToA = true;
+        Queue<Integer> queueA = new Queue<>();
+        Queue<Integer> queueB = new Queue<>();
 
-            if (hypernyms.get(currentPositionA) != null) {
-                for (int p : hypernyms.get(currentPositionA)) {
-                    childCount[p] += childCount[currentPositionA] + 1;
-                    return findCommonAncestor(p, currentPositionB, false);
-                }
-            } else return findCommonAncestor(currentPositionA, currentPositionB, false);
-        } else {
-            if (isSynsetMarked(currentPositionB)) return currentPositionB;
-            markPosition(currentPositionB);
+        queueA.enqueue(currentPositionA);
+        queueB.enqueue(currentPositionB);
 
-            if (hypernyms.get(currentPositionB) != null) {
-                for (int p : hypernyms.get(currentPositionB)) {
-                    childCount[p] += childCount[currentPositionB] + 1;
-                    return findCommonAncestor(currentPositionA, p, true);
+        markPosition(currentPositionA);
+        markPosition(currentPositionB);
+
+        int d;
+
+        while (true) {
+            if (switchToA) {
+                if (!queueB.isEmpty()) {
+                    d = queueB.dequeue();
+                    if (hypernyms.get(d) != null) {
+                        for (int s : hypernyms.get(d)) {
+                            if (!isSynsetMarked(s)) {
+                                queueB.enqueue(s);
+                                markPosition(s);
+                                childCount[s] += childCount[d] + 1;
+                            } else {
+                                childCount[s] += childCount[d] + 1;
+                                return s;
+                            }
+                        }
+                    }
                 }
-            } else return findCommonAncestor(currentPositionA, currentPositionB, true);
+                switchToA = false;
+            } else {
+                if (!queueA.isEmpty()) {
+                    d = queueA.dequeue();
+                    if (hypernyms.get(d) != null) {
+                        for (int s : hypernyms.get(d)) {
+                            if (!isSynsetMarked(s)) {
+                                queueA.enqueue(s);
+                                markPosition(s);
+                                childCount[s] += childCount[d] + 1;
+                            } else {
+                                childCount[s] += childCount[d] + 1;
+                                return s;
+                            }
+                        }
+                    }
+                }
+                switchToA = true;
+            }
         }
-        return rootPosition;
     }
 
     private void markPosition(int currentPositionA) {
@@ -279,7 +307,7 @@ public class WordNet {
                         "\\directed_graphs\\hypernyms.txt"
         );
 
-        StdOut.println(wn.sap("miracle", "group_action"));
-        StdOut.println(wn.distance("miracle", "group_action"));
+        StdOut.println(wn.sap("demotion", "dash"));
+        StdOut.println(wn.distance("demotion", "dash"));
     }
 }
