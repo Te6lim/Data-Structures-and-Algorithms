@@ -1,6 +1,7 @@
 package directed_graphs;
 
 import edu.princeton.cs.algs4.Digraph;
+import edu.princeton.cs.algs4.Queue;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,7 +23,7 @@ public class SAP {
     public int length(int v, int w) {
         resetChildCount();
         resetMarkedVertices();
-        int ancestorPosition = dfs(v, w, true);
+        int ancestorPosition = findCommonAncestor(v, w);
         if (ancestorPosition >= 0) return childCount[ancestorPosition];
         return ancestorPosition;
     }
@@ -31,7 +32,7 @@ public class SAP {
     public int ancestor(int v, int w) {
         resetChildCount();
         resetMarkedVertices();
-        return dfs(v, w, true);
+        return findCommonAncestor(v, w);
     }
 
     // length of shortest ancestral path between any vertex in v and any vertex in w; -1 if no such path
@@ -42,7 +43,7 @@ public class SAP {
             for (Integer j : w) {
                 resetChildCount();
                 resetMarkedVertices();
-                ancestor = dfs(i, j, true);
+                ancestor = findCommonAncestor(i, j);
                 if (ancestor >= 0) {
                     if (Collections.binarySearch(ancestors, ancestor) < 0) {
                         ancestors.add(ancestor);
@@ -64,7 +65,7 @@ public class SAP {
             for (Integer j : w) {
                 resetChildCount();
                 resetMarkedVertices();
-                ancestor = dfs(i, j, true);
+                ancestor = findCommonAncestor(i, j);
                 if (ancestor >= 0) {
                     if (Collections.binarySearch(ancestors, ancestor) < 0) {
                         ancestors.add(ancestor);
@@ -78,27 +79,53 @@ public class SAP {
         if (lengths.isEmpty()) return -1; else return lengthHashMap.get(lengths.get(0));
     }
 
-    private int dfs(int v, int w, boolean switchToV) {
-        if (switchToV) {
-            if (isVertexMarked[v]) return v;
-            isVertexMarked[v] = true;
-            if (diGraph.outdegree(v) > 0) {
-                for (int x : diGraph.adj(v)) {
-                    childCount[x] = childCount[v] + 1;
-                    return dfs(x, w, false);
-                }
+    private int findCommonAncestor(int v, int w) {
+        Queue<Integer> A = new Queue<>();
+        Queue<Integer> B = new Queue<>();
+
+        boolean toggleToV = true;
+
+        A.enqueue(v);
+        B.enqueue(w);
+
+        markVertex(v);
+        markVertex(w);
+
+        while (true) {
+            int x;
+            if (toggleToV) {
+                x = findCommonAncestor(A);
+                if (x != -1) return x;
+                toggleToV = false;
+            } else {
+                x = findCommonAncestor(B);
+                if (x != -1) return x;
+                toggleToV = true;
             }
-        } else {
-            if (isVertexMarked[w]) return w;
-            isVertexMarked[w] = true;
-            if (diGraph.outdegree(w) > 0) {
-                for (int x : diGraph.adj(w)) {
-                    childCount[x] = childCount[w] + 1;
-                    return dfs(v, x, true);
-                }
+        }
+    }
+
+    private int findCommonAncestor(Queue<Integer> a) {
+        int d;
+        d = a.dequeue();
+        if (diGraph.outdegree(d) > 0) return enqueueNeighboursOfDAndReturnIfMarked(a, d);
+        return -1;
+    }
+
+    private int enqueueNeighboursOfDAndReturnIfMarked(Queue<Integer> a, int d) {
+        for (int x : diGraph.adj(d)) {
+            childCount[x] += childCount[d] + 1;
+            if (isVertexMarked[x]) return x;
+            else {
+                a.enqueue(x);
+                markVertex(x);
             }
         }
         return -1;
+    }
+
+    private void markVertex(int v) {
+        isVertexMarked[v] = true;
     }
 
     private void resetMarkedVertices() {
